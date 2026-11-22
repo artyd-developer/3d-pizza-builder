@@ -1,4 +1,4 @@
-export type IngredientType = 'pepperoni' | 'mushroom' | 'pineapple';
+export type IngredientType = 'pepperoni' | 'mushroom' | 'pineapple' | 'olives' | 'jalapeno' | 'bacon';
 export type MotionState = 'SPAWNING' | 'FALLING' | 'LANDING' | 'IDLE';
 export type Quarter = 0 | 1 | 2 | 3;
 

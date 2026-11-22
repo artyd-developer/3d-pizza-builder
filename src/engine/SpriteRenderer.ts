@@ -2,7 +2,7 @@ import type { Camera } from './Camera';
 import type { Ingredient, IngredientType } from './PizzaModel';
 import { createProgram } from './ShaderProgram';
 
-const types: IngredientType[] = ['pepperoni', 'mushroom', 'pineapple'];
+const types: IngredientType[] = ['pepperoni', 'mushroom', 'pineapple', 'olives', 'jalapeno', 'bacon'];
 const VERTEX = `#version 300 es
 precision highp float;
 layout(location=0) in vec2 aCorner;
@@ -63,10 +63,19 @@ function fallbackPixels(type: IngredientType): Uint8Array {
     } else if (type === 'mushroom') {
       inside = (ny < 0.08 && nx * nx + (ny + 0.04) ** 2 < 0.86 ** 2) || (Math.abs(nx) < 0.22 && ny > -0.1 && ny < 0.83);
       color = ny < 0.08 ? [150 - y * 0.5, 99 - y * 0.3, 58] : [224, 190, 143];
-    } else {
+    } else if (type === 'pineapple') {
       inside = nx > -0.76 && nx < 0.77 && ny > -0.78 && ny < 0.66
         && ny < 0.65 - 0.35 * nx && ny > -0.78 + 0.16 * nx;
       color = [252, 191 - y * 0.18, 40];
+    } else if (type === 'olives') {
+      inside = r > 0.36 && r < 0.78;
+      color = [42, 34, 25];
+    } else if (type === 'jalapeno') {
+      inside = r > 0.25 && r < 0.82;
+      color = [57, 125, 33];
+    } else {
+      inside = Math.abs(ny - 0.22 * Math.sin(nx * 4)) < 0.32 && Math.abs(nx) < 0.83;
+      color = Math.abs(ny) < 0.13 ? [204, 70, 43] : [240, 177, 124];
     }
     const index = (y * width + x) * 4;
     pixels[index] = Math.max(0, color[0]);

@@ -23,7 +23,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 900, height: 700 } });
   await page.goto(url);
   await page.locator('canvas').waitFor();
-  assert.deepEqual(await page.locator('.ingredient-name').allTextContents(), ['pepperoni', 'mushroom', 'pineapple']);
+  assert.deepEqual(await page.locator('.ingredient-name').allTextContents(), ['pepperoni', 'mushroom', 'pineapple', 'olives', 'Jalapeño', 'bacon']);
   assert.equal(await page.getByRole('button', { name: /^mozzarella/i }).count(), 0);
   assert.equal(await page.locator('[role=alert]').count(), 0);
   assert.equal(await page.getByRole('button', { name: 'Undo' }).isDisabled(), true, 'empty undo disabled');

@@ -65,7 +65,11 @@ export class PizzaEngine {
   };
 
   addIngredient(type: IngredientType): void {
-    const size = type === 'mushroom' ? 0.22 : type === 'pepperoni' ? 0.20 : 0.18;
+    const sizes: Record<IngredientType, number> = {
+      pepperoni: 0.20, mushroom: 0.22, pineapple: 0.18,
+      olives: 0.18, jalapeno: 0.19, bacon: 0.20,
+    };
+    const size = sizes[type];
     const quarter = this.model.selectedQuarter;
     const footprint = type === 'pepperoni' ? size * 1.35 : size;
     const placement = quarter === null ? null : findPlacement(quarter, footprint, this.model.ingredients);

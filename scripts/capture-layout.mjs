@@ -10,7 +10,11 @@ const url = `http://127.0.0.1:${server.httpServer.address().port}/`;
 const browser = await chromium.launch({ executablePath: chrome, headless: true, args: ['--no-sandbox', '--enable-gpu'] });
 mkdirSync('screenshots', { recursive: true });
 try {
-  for (const [name, viewport] of [['desktop', { width: 1440, height: 900 }], ['mobile', { width: 390, height: 844 }]]) {
+  for (const [name, viewport] of [
+    ['desktop', { width: 1440, height: 900 }],
+    ['tablet', { width: 768, height: 1024 }],
+    ['mobile', { width: 390, height: 844 }],
+  ]) {
     const page = await browser.newPage({ viewport, deviceScaleFactor: name === 'mobile' ? 2 : 1 });
     await page.goto(url);
     await page.locator('.quarter-button').first().click();
@@ -21,7 +25,7 @@ try {
     await page.screenshot({ path: `screenshots/${name}.png`, fullPage: true });
     await page.close();
   }
-  console.log('Saved desktop and mobile screenshots.');
+  console.log('Saved desktop, tablet, and mobile screenshots.');
 } finally {
   await browser.close();
   await server.close();

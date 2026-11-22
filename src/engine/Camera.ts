@@ -15,7 +15,7 @@ export class Camera {
     const distance = 6.5 * Math.max(1, 1.15 / aspect);
     const elevation = 40 * Math.PI / 180;
     this.eye = [0, distance * Math.sin(elevation), distance * Math.cos(elevation)];
-    this.viewProjection = multiply(perspective(FOV, aspect, 0.1, 60), lookAt(this.eye, [0, 0, 0], [0, 1, 0]));
+    this.viewProjection = multiply(perspective(FOV, aspect, 0.1, 60), lookAt(this.eye, [0, -0.5, 0], [0, 1, 0]));
   }
 
   // Unprojects a CSS pixel into the pizza plane; the same camera matrices drive rendering.
