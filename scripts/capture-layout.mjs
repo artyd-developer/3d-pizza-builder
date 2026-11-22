@@ -17,10 +17,12 @@ try {
   ]) {
     const page = await browser.newPage({ viewport, deviceScaleFactor: name === 'mobile' ? 2 : 1 });
     await page.goto(url);
+    await page.waitForFunction(() => !document.querySelector('.edit-grid button').disabled);
+    await page.getByRole('button', { name: 'Create my bomb' }).click();
     await page.locator('.quarter-button').first().click();
-    for (const ingredient of ['mushroom', 'pineapple', 'pepperoni']) await page.getByRole('button', { name: new RegExp(`^${ingredient}`, 'i') }).click();
+    for (const ingredient of ['mushroom', 'pineapple']) await page.locator('.ingredient-button').filter({ hasText: new RegExp(`^${ingredient}`, 'i') }).click();
     await page.locator('.quarter-button').nth(2).click();
-    for (const ingredient of ['mushroom', 'pineapple']) await page.getByRole('button', { name: new RegExp(`^${ingredient}`, 'i') }).click();
+    for (const ingredient of ['pepperoni', 'bacon']) await page.locator('.ingredient-button').filter({ hasText: new RegExp(`^${ingredient}`, 'i') }).click();
     await page.waitForTimeout(1500);
     await page.screenshot({ path: `screenshots/${name}.png`, fullPage: true });
     await page.close();

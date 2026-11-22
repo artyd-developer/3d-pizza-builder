@@ -49,3 +49,32 @@ export function findPlacement(
   }
   return best;
 }
+
+export function batchPlacements(quarter: Quarter, footprint: number, alternate = false): Placement[] {
+  const rings = [{ radius: 0.70, count: 2 }, { radius: 1.12, count: 4 }, { radius: 1.52, count: 6 }];
+  const result: Placement[] = [];
+  for (const { radius, count } of rings) for (let index = 0; index < count; index++) {
+    const fraction = (index + 0.5 + (alternate ? 0.28 : 0)) / count;
+    const baseAngle = (quarter + 0.13 + fraction * 0.74) * Math.PI / 2;
+    let point: Placement | null = null;
+    for (let attempt = 0; attempt < 40; attempt++) {
+      const angle = baseAngle + (Math.random() - 0.5) * 0.74 * Math.PI / (2 * count);
+      const distance = radius + (Math.random() - 0.5) * 0.34;
+      const candidate = { x: Math.cos(angle) * distance, z: Math.sin(angle) * distance };
+      if (!fitsQuarter(candidate, quarter, footprint)) continue;
+      if (result.some((other) => Math.hypot(candidate.x - other.x, candidate.z - other.z) < footprint * 1.12)) continue;
+      point = candidate;
+      break;
+    }
+    if (!point) {
+      const angle = baseAngle;
+      point = { x: Math.cos(angle) * radius, z: Math.sin(angle) * radius };
+    }
+    result.push(point);
+  }
+  for (let index = result.length - 1; index > 0; index--) {
+    const other = Math.floor(Math.random() * (index + 1));
+    [result[index], result[other]] = [result[other], result[index]];
+  }
+  return result;
+}

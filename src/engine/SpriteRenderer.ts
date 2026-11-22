@@ -87,6 +87,7 @@ function fallbackPixels(type: IngredientType): Uint8Array {
 }
 
 export class SpriteRenderer {
+  readonly ready: Promise<void>;
   private program: WebGLProgram;
   private vao: WebGLVertexArrayObject;
   private quad: WebGLBuffer;
@@ -126,7 +127,7 @@ export class SpriteRenderer {
     this.viewLocation = gl.getUniformLocation(this.program, 'uViewProjection');
     this.shadowLocation = gl.getUniformLocation(this.program, 'uShadow');
     this.textureLocation = gl.getUniformLocation(this.program, 'uTexture');
-    for (const type of types) this.loadTexture(type);
+    this.ready = Promise.all(types.map((type) => this.loadTexture(type))).then(() => {});
   }
 
   private createTexture(pixels: TexImageSource | Uint8Array): WebGLTexture {
@@ -148,18 +149,21 @@ export class SpriteRenderer {
     return texture;
   }
 
-  private loadTexture(type: IngredientType): void {
+  private loadTexture(type: IngredientType): Promise<void> {
     this.textures.set(type, this.createTexture(fallbackPixels(type)));
     const image = new Image();
+    return new Promise((resolve) => {
     image.onload = () => {
       if (!this.alive) return;
       const replacement = this.createTexture(image);
       const old = this.textures.get(type);
       if (old) this.gl.deleteTexture(old);
       this.textures.set(type, replacement);
+      resolve();
     };
-    image.onerror = () => { /* Keep the generated fallback texture. */ };
-    image.src = `/ingredients/${type}.png`;
+    image.onerror = () => { resolve(); };
+    image.src = `${import.meta.env.BASE_URL}ingredients/${type}.png`;
+    });
   }
 
   render(camera: Camera, ingredients: readonly Ingredient[], surfaceHeight: (x: number, z: number) => number): void {

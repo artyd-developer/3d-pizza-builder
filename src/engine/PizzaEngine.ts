@@ -1,7 +1,7 @@
 import { PizzaModel, type IngredientType } from './PizzaModel';
 import { PizzaRenderer } from './PizzaRenderer';
 import { pickQuarter } from './QuarterMath';
-import { findPlacement } from './Placement';
+import { batchPlacements } from './Placement';
 import { advanceAnimation } from './Animation';
 import { CheesePhysics } from './CheesePhysics';
 
@@ -13,10 +13,12 @@ export class PizzaEngine {
   private stopped = false;
   private lastFrame = 0;
   private accumulator = 0;
+  readonly ready: Promise<void>;
 
   constructor(readonly canvas: HTMLCanvasElement, model?: PizzaModel, private onError?: (message: string) => void) {
     this.model = model ?? new PizzaModel();
     this.renderer = new PizzaRenderer(canvas);
+    this.ready = this.renderer.ready;
     this.loop = this.loop.bind(this);
     canvas.addEventListener('webglcontextlost', this.contextLost);
     canvas.addEventListener('webglcontextrestored', this.contextRestored);
@@ -71,9 +73,27 @@ export class PizzaEngine {
     };
     const size = sizes[type];
     const quarter = this.model.selectedQuarter;
+    if (quarter === null) { this.model.addBatch(type, []); return; }
+    if (this.model.recipes[quarter].includes(type)) return;
     const footprint = type === 'pepperoni' ? size * 1.35 : size;
-    const placement = quarter === null ? null : findPlacement(quarter, footprint, this.model.ingredients);
-    this.model.addIngredient(type, placement, size, Math.random() * Math.PI * 2);
+    const alternate = this.model.recipes[quarter].length > 0;
+    const batch = batchPlacements(quarter, footprint, alternate).map((placement, index) =>
+      this.model.createPiece(type, quarter, placement, size, Math.random() * Math.PI * 2, index * 0.065));
+    const removed = this.model.addBatch(type, batch);
+    removed.forEach((item) => this.cheese.removeImpact(item.id));
+  }
+
+  applyRecipes(recipes: readonly (readonly IngredientType[])[], message: string): void {
+    const batches = recipes.map((recipe, quarter) => recipe.flatMap((type, typeIndex) => {
+      const size = ({ pepperoni: 0.20, mushroom: 0.22, pineapple: 0.18,
+        olives: 0.18, jalapeno: 0.19, bacon: 0.20 } satisfies Record<IngredientType, number>)[type];
+      const footprint = type === 'pepperoni' ? size * 1.35 : size;
+      return batchPlacements(quarter as 0 | 1 | 2 | 3, footprint, typeIndex > 0).map((placement, index) =>
+        this.model.createPiece(type, quarter as 0 | 1 | 2 | 3, placement, size,
+          Math.random() * Math.PI * 2, (quarter * 2 + typeIndex) * 0.28 + index * 0.065));
+    }));
+    this.cheese.clear();
+    this.model.replaceRecipes(recipes, batches, message);
   }
 
   undo(): void {

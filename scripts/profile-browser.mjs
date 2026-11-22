@@ -13,13 +13,17 @@ try {
   for (const viewport of [{ width: 900, height: 700 }, { width: 390, height: 720 }]) {
     const page = await browser.newPage({ viewport, deviceScaleFactor: viewport.width < 500 ? 2 : 1 });
     await page.goto(url);
+    await page.waitForFunction(() => !document.querySelector('.edit-grid button').disabled);
     const canvas = page.locator('canvas');
     assert.equal(await page.locator('[role=alert]').count(), 0, 'WebGL renderer started');
     const box = await canvas.boundingBox();
     await canvas.click({ position: { x: box.width * 0.62, y: box.height * 0.62 } });
-    for (let i = 0; i < 12; i++) await page.getByRole('button', { name: i % 3 === 0 ? 'mushroom' : i % 3 === 1 ? 'pineapple' : 'pepperoni' }).click();
-    const count = await page.locator('.count-pill').innerText();
-    assert.ok(Number(count.match(/\d+/)?.[0]) >= 6, `several toppings were added: ${count}`);
+    await page.getByRole('button', { name: 'Supreme pizza preset' }).click();
+    for (let quarter = 0; quarter < 4; quarter++) {
+      await page.locator('.quarter-button').nth(quarter).click();
+      assert.equal(await page.getByRole('button', { name: /^pepperoni/i }).getAttribute('aria-pressed'), 'true');
+      assert.equal(await page.getByRole('button', { name: /^mushroom/i }).getAttribute('aria-pressed'), 'true');
+    }
     const intervals = await page.evaluate(() => new Promise((resolve) => {
       const samples = [];
       let previous = 0;
@@ -34,7 +38,7 @@ try {
     const sorted = [...intervals].sort((a, b) => a - b);
     const average = intervals.reduce((a, b) => a + b, 0) / intervals.length;
     const p95 = sorted[Math.floor(sorted.length * 0.95)];
-    console.log(`${viewport.width}x${viewport.height}, ${count}: ${intervals.length} frames, average ${average.toFixed(1)} ms, p95 ${p95.toFixed(1)} ms`);
+    console.log(`${viewport.width}x${viewport.height}, Supreme preset: ${intervals.length} frames, average ${average.toFixed(1)} ms, p95 ${p95.toFixed(1)} ms`);
     await page.close();
   }
 } finally {

@@ -25,11 +25,13 @@ export interface PizzaSnapshot {
   selectedQuarter: Quarter | null;
   selectedIngredient: IngredientType | null;
   ingredientCount: number;
+  recipes: IngredientType[][];
   message: string;
 }
 
 export class PizzaModel {
   readonly ingredients: Ingredient[] = [];
+  readonly recipes: IngredientType[][] = [[], [], [], []];
   selectedQuarter: Quarter | null = null;
   selectedIngredient: IngredientType | null = null;
   message = 'Tap a quarter of the pizza to begin.';
@@ -41,6 +43,7 @@ export class PizzaModel {
       selectedQuarter: this.selectedQuarter,
       selectedIngredient: this.selectedIngredient,
       ingredientCount: this.ingredients.length,
+      recipes: this.recipes.map((recipe) => [...recipe]),
       message: this.message,
     };
   }
@@ -86,6 +89,48 @@ export class PizzaModel {
     return ingredient;
   }
 
+  replaceRecipes(recipes: readonly (readonly IngredientType[])[], batches: readonly Ingredient[][], message: string): Ingredient[] {
+    const removed = this.ingredients.splice(0);
+    for (let quarter = 0; quarter < 4; quarter++) {
+      this.recipes[quarter] = [...recipes[quarter]];
+      this.ingredients.push(...batches[quarter]);
+    }
+    this.selectedIngredient = null;
+    this.message = message;
+    this.emit();
+    return removed;
+  }
+
+  addBatch(type: IngredientType, batch: Ingredient[]): Ingredient[] {
+    const quarter = this.selectedQuarter;
+    if (quarter === null) {
+      this.message = 'Select a pizza quarter first.';
+      this.emit();
+      return [];
+    }
+    const recipe = this.recipes[quarter];
+    if (recipe.includes(type)) return [];
+    const removed = recipe.length === 2
+      ? this.ingredients.filter((item) => item.quarter === quarter && item.type === recipe[0]) : [];
+    if (removed.length) this.ingredients.splice(0, this.ingredients.length,
+      ...this.ingredients.filter((item) => !removed.includes(item)));
+    if (recipe.length === 2) recipe.shift();
+    recipe.push(type);
+    this.ingredients.push(...batch);
+    this.selectedIngredient = type;
+    this.message = `${type[0].toUpperCase()}${type.slice(1)} added to quarter ${quarter + 1}.`;
+    this.emit();
+    return removed;
+  }
+
+  createPiece(type: IngredientType, quarter: Quarter, placement: Placement, size: number, rotation: number, delay = 0): Ingredient {
+    return {
+      id: this.nextId++, type, quarter, x: placement.x, z: placement.z, size, rotation,
+      state: 'SPAWNING', age: -delay, height: 0.95, velocity: 0,
+      spin: (Math.random() - 0.5) * 1.2, impactAge: 0,
+    };
+  }
+
   undo(): Ingredient | null {
     const removed = this.ingredients.pop() ?? null;
     if (removed) {
@@ -97,12 +142,14 @@ export class PizzaModel {
 
   clear(): void {
     this.ingredients.length = 0;
+    this.recipes.forEach((recipe) => recipe.splice(0));
     this.message = 'Pizza cleared. Your selections are ready.';
     this.emit();
   }
 
   reset(): void {
     this.ingredients.length = 0;
+    this.recipes.forEach((recipe) => recipe.splice(0));
     this.selectedQuarter = null;
     this.selectedIngredient = null;
     this.message = 'Tap a quarter of the pizza to begin.';

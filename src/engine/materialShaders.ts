@@ -21,6 +21,7 @@ in vec3 vNormal;
 in vec2 vUv;
 uniform int uMaterial;
 uniform int uSelected;
+uniform float uTime;
 uniform int uImpactCount;
 uniform vec4 uImpacts[8];
 uniform sampler2D uCheeseTexture;
@@ -39,6 +40,12 @@ float fbm(vec2 p) {
        + noise(p * 4.37 - 2.8) * 0.17;
 }
 
+// Blend three world-space projections so detail retains its scale on
+// both the horizontal crown and the steep inner/outer crust walls.
+float crustNoise(vec3 p, vec3 weights) {
+  return dot(vec3(noise(p.yz), noise(p.xz), noise(p.xy)), weights);
+}
+
 void main() {
   vec2 p = vWorld.xz;
   float broad = fbm(p * 2.3);
@@ -51,11 +58,19 @@ void main() {
     color = mix(color, vec3(0.43, 0.20, 0.085), toast * 0.55);
     color += (fine - 0.5) * 0.13;
   } else if (uMaterial == 1) {
-    float charSpot = smoothstep(0.66, 0.84, fbm(p * 7.0 + vWorld.y * 2.0));
-    float rim = smoothstep(0.06, 0.28, vWorld.y);
-    color = mix(vec3(0.48, 0.24, 0.095), vec3(0.94, 0.65, 0.34), rim);
-    color = mix(color, vec3(0.36, 0.17, 0.06), charSpot * 0.50);
-    color += (fine - 0.5) * 0.09;
+    vec3 weights = pow(abs(normalize(vNormal)), vec3(4.0));
+    weights /= max(weights.x + weights.y + weights.z, 0.0001);
+    vec3 bread = vWorld * 5.5;
+    float bake = crustNoise(bread, weights) * 0.55
+      + crustNoise(bread * 2.13 + 8.1, weights) * 0.28
+      + crustNoise(bread * 4.37 - 2.8, weights) * 0.17;
+    float blister = crustNoise(bread * 3.8, weights);
+    float toast = smoothstep(0.46, 0.73, bake);
+    float charSpot = smoothstep(0.73, 0.90, blister) * smoothstep(0.52, 0.70, bake);
+    color = mix(vec3(1.0, 0.79, 0.46), vec3(0.77, 0.36, 0.10), toast);
+    color = mix(color, vec3(0.29, 0.10, 0.025), charSpot * 0.80);
+    color += (crustNoise(bread * 13.0, weights) - 0.5) * vec3(0.11, 0.075, 0.045);
+    color += smoothstep(0.68, 0.89, crustNoise(bread * 7.0, weights)) * vec3(0.065, 0.045, 0.025);
   } else if (uMaterial == 2) {
     color = mix(vec3(0.49, 0.055, 0.025), vec3(0.80, 0.18, 0.055), broad);
     color += (fine - 0.5) * vec3(0.20, 0.07, 0.025);
@@ -86,9 +101,11 @@ void main() {
     float start = float(uSelected) * 1.5707963;
     float local = a - start;
     if (local >= 0.0 && local < 1.5707963) {
-      color = mix(color, color + vec3(0.09, 0.055, 0.012), 0.8);
+      float pulse = 0.5 + 0.5 * sin(uTime * 4.2);
+      color = mix(color, vec3(1.0, 0.36, 0.08), 0.14 + pulse * 0.20);
       float edge = min(local, 1.5707963 - local);
-      color += vec3(0.12, 0.08, 0.018) * (1.0 - smoothstep(0.0, 0.022, edge));
+      color += vec3(0.18, 0.09, 0.012) * (0.38 + pulse * 0.62)
+        * (1.0 - smoothstep(0.0, 0.022, edge));
     }
   }
   if (uMaterial == 3) {

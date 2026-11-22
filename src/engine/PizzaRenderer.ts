@@ -5,6 +5,7 @@ import type { PizzaModel } from './PizzaModel';
 import { createProgram } from './ShaderProgram';
 import { SpriteRenderer } from './SpriteRenderer';
 import { CheesePhysics } from './CheesePhysics';
+import { SteamRenderer } from './SteamRenderer';
 
 interface GpuMesh {
   vao: WebGLVertexArrayObject;
@@ -22,6 +23,7 @@ function baseCheeseHeight(x: number, z: number): number {
 }
 
 export class PizzaRenderer {
+  readonly ready: Promise<void>;
   readonly gl: WebGL2RenderingContext;
   readonly camera = new Camera();
   private program: WebGLProgram;
@@ -29,6 +31,7 @@ export class PizzaRenderer {
   private viewProjectionLocation: WebGLUniformLocation | null;
   private materialLocation: WebGLUniformLocation | null;
   private selectedLocation: WebGLUniformLocation | null;
+  private timeLocation: WebGLUniformLocation | null;
   private impactCountLocation: WebGLUniformLocation | null;
   private impactsLocation: WebGLUniformLocation | null;
   private cheeseTextureLocation: WebGLUniformLocation | null;
@@ -37,6 +40,7 @@ export class PizzaRenderer {
   private cheeseImageLoaded = false;
   private alive = true;
   private sprites: SpriteRenderer;
+  private steam: SteamRenderer;
   private cheeseWasActive = false;
   private dirtyCheeseVertices = new Set<number>();
 
@@ -48,6 +52,7 @@ export class PizzaRenderer {
     this.viewProjectionLocation = gl.getUniformLocation(this.program, 'uViewProjection');
     this.materialLocation = gl.getUniformLocation(this.program, 'uMaterial');
     this.selectedLocation = gl.getUniformLocation(this.program, 'uSelected');
+    this.timeLocation = gl.getUniformLocation(this.program, 'uTime');
     this.impactCountLocation = gl.getUniformLocation(this.program, 'uImpactCount');
     this.impactsLocation = gl.getUniformLocation(this.program, 'uImpacts[0]');
     this.cheeseTextureLocation = gl.getUniformLocation(this.program, 'uCheeseTexture');
@@ -61,6 +66,7 @@ export class PizzaRenderer {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     const cheeseImage = new Image();
+    const cheeseReady = new Promise<void>((resolve) => {
     cheeseImage.onload = () => {
       if (!this.alive) return;
       gl.activeTexture(gl.TEXTURE1);
@@ -70,8 +76,11 @@ export class PizzaRenderer {
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
       gl.generateMipmap(gl.TEXTURE_2D);
       this.cheeseImageLoaded = true;
+      resolve();
     };
-    cheeseImage.src = '/materials/cheese.png';
+    cheeseImage.onerror = () => resolve();
+    });
+    cheeseImage.src = `${import.meta.env.BASE_URL}materials/cheese.png`;
     this.meshes = [
       this.makeMesh(createDisk(2.35, -0.15), 0),
       this.makeMesh(createDisk(2.20, 0.015), 0),
@@ -83,6 +92,8 @@ export class PizzaRenderer {
     gl.depthFunc(gl.LEQUAL);
     this.updateCheese(new CheesePhysics(), true);
     this.sprites = new SpriteRenderer(gl);
+    this.ready = Promise.all([cheeseReady, this.sprites.ready]).then(() => {});
+    this.steam = new SteamRenderer(gl);
   }
 
   private makeMesh(data: MeshData, material: number): GpuMesh {
@@ -162,6 +173,7 @@ export class PizzaRenderer {
     gl.useProgram(this.program);
     gl.uniformMatrix4fv(this.viewProjectionLocation, false, this.camera.viewProjection);
     gl.uniform1i(this.selectedLocation, model.selectedQuarter ?? -1);
+    gl.uniform1f(this.timeLocation, performance.now() * 0.001);
     gl.uniform1i(this.impactCountLocation, Math.min(8, cheese.activeCount));
     gl.uniform4fv(this.impactsLocation, cheese.visualImpacts());
     gl.activeTexture(gl.TEXTURE1);
@@ -175,6 +187,7 @@ export class PizzaRenderer {
     }
     gl.bindVertexArray(null);
     this.sprites.render(this.camera, model.ingredients, (x, z) => baseCheeseHeight(x, z) + cheese.sample(x, z));
+    this.steam.render(this.camera, performance.now() * 0.001);
   }
 
   destroy(): void {
@@ -188,5 +201,6 @@ export class PizzaRenderer {
     gl.deleteProgram(this.program);
     gl.deleteTexture(this.cheeseTexture);
     this.sprites.destroy();
+    this.steam.destroy();
   }
 }
