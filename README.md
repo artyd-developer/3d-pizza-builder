@@ -13,12 +13,21 @@ An interactive four-quarter pizza constructor rendered with raw WebGL 2.0 and GL
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)
 ![Vite](https://img.shields.io/badge/Vite-Powered-646CFF?logo=vite)
 
+## Livedemo
+🚀 [Open Website Demo](https://artyd-developer.github.io/3d-pizza-builder/)
+
 ## Project tools and typography
 
 This project was built with ChatGPT Codex and planned with OpenSpec.
 
 - Headings font: Makcex by Khurasan
 - Interface text font: PastiRegular by Visia Yerian
+
+## Pipeline
+
+The webpage was created with the help of Codex. However, some manual work was required to create the mockup. I also personally sliced the chef's image into separate parts to achieve a 3D effect, and fine-tuned the 3D camera perspective, the angle of the 3D pizza, and the position of the chef's hand.
+
+<img width="734" height="256" alt="pipeline" src="https://github.com/user-attachments/assets/92a8a46f-bf6f-48b0-98e6-6756749c920f" />
 
 ## Run locally
 
