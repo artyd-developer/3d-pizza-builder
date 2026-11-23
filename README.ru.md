@@ -49,6 +49,4 @@ npm ci
 npm run build
 ```
 
-Опубликуйте созданную папку `dist/` через GitHub Pages. В репозитории пока нет GitHub Actions workflow для деплоя: настройте его в GitHub или публикуйте папку `dist/` выбранным вами способом.
-
 English documentation: [README.md](README.md).

@@ -48,5 +48,3 @@ The Vite configuration uses relative asset paths, so the production build works 
 npm ci
 npm run build
 ```
-
-Publish the generated `dist/` directory through GitHub Pages. This repository does not currently include a GitHub Actions deployment workflow; configure one in GitHub or deploy the `dist/` folder with your preferred publishing method.
