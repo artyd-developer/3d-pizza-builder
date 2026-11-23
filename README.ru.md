@@ -50,5 +50,3 @@ npm run dev
 npm ci
 npm run build
 ```
-
-English documentation: [README.md](README.md).
