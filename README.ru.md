@@ -2,6 +2,8 @@
 
 # Pizza Builder
 
+<img width="800" height="600" alt="review" src="https://github.com/user-attachments/assets/b0fb633d-34d5-406b-b9fe-36eb9130d4cd" />
+
 Интерактивный конструктор пиццы из четырёх четвертей, отрисованный на чистом WebGL 2.0 и GLSL ES 3.00. React отвечает за элементы управления, а движок сцены — за рендеринг и анимацию.
 
 ---
