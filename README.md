@@ -1,6 +1,9 @@
+
 [English](README.md) | [Русский](README.ru.md)
 
 # Pizza Builder
+
+<img width="800" height="600" alt="review" src="https://github.com/user-attachments/assets/b0fb633d-34d5-406b-b9fe-36eb9130d4cd" />
 
 An interactive four-quarter pizza constructor rendered with raw WebGL 2.0 and GLSL ES 3.00. React provides the controls; the scene engine owns rendering and animation.
 
