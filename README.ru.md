@@ -12,12 +12,21 @@
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)
 ![Vite](https://img.shields.io/badge/Vite-Powered-646CFF?logo=vite)
 
+## Демонстрация
+🚀 [Посмотреть демо](https://artyd-developer.github.io/3d-pizza-builder/)
+
 ## Инструменты и типографика
 
 Этот проект создан с помощью ChatGPT Codex и спланирован с OpenSpec.
 
 - Щрифт заголовков : Makcex (бесплатная лицензия) автор Khurasan
 - Шрифт текста интерфейса: PastiRegular (бесплатная лицензия) автор Visia Yerian
+
+## Разработка
+
+Веб-страница была создана с помощью Codex. Однако для создания макета потребовалась и ручная работа. Кроме того, я самостоятельно разделил изображение повара на отдельные части для достижения 3D-эффекта, а также точнее настроил перспективу 3D-камеры, угол наклона 3D-пиццы и положение руки повара.
+
+<img width="734" height="256" alt="pipeline" src="https://github.com/user-attachments/assets/92a8a46f-bf6f-48b0-98e6-6756749c920f" />
 
 ## Запуск локально
 
